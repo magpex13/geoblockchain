@@ -35,12 +35,33 @@ const contractAddress = '5D5MfMTWRfCsEb95pa4Hx6x8FbkWghZQFCNys3ykQ7qXWb6t';
     // console.log('query:\n', contract.query);
     // console.log('tx:\n', contract.tx);
 
-    const gasLimit = -1;
-    const storageDepositLimit = null;
+    let keyring = new Keyring({ type: "sr25519" });
+    let aliceKeypair = keyring.addFromUri('//Alice');
 
-    const conejo = await contract.tx.flip(aliceAddress, { gasLimit, storageDepositLimit });
-    const healthRecord = conejo.output?.toHuman();
-    console.log(healthRecord.description);
+
+    const gasLimit = -1;
+    const storageDepositLimit = undefined;
+
+
+    let conejo = await contract.query.get(aliceAddress, { gasLimit, storageDepositLimit });
+    console.log(conejo.output?.toHuman());
+
+    // TRANSACTION - MODIFICAR VALORES
+    await contract.tx["flip"]({ gasLimit, storageDepositLimit }).signAndSend(aliceKeypair, async result => {
+        console.log(result);
+        result.events.forEach(record => {
+            const { event } = record;
+            const key = `${event.section}:${event.method}`;
+            console.log(key);
+        });
+    });
+
+    // conejo = await contract.query.get(aliceAddress, { gasLimit, storageDepositLimit });
+    // console.log(conejo.output?.toHuman());
+
+
+    // console.log(conejo.toHuman());
+
     // console.log(healthRecord[patientId]);
 
     // console.log(contract.registry.findMetaError(conejo.result.asErr.asModule));
