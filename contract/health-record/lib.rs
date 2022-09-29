@@ -39,7 +39,7 @@ mod flipper {
                 let caller = Self::env().caller();
                 let health_record :HealthRecord = HealthRecord{
                     id: 1,
-                    patient_id: "2".into(),
+                    patient_id: "1".into(),
                     description: "conejo".into(),
                     date: "2022-08-24".into(),
                 };
@@ -75,6 +75,12 @@ mod flipper {
         pub fn get_health_record(&self) -> HealthRecord {
             let caller = Self::env().caller();
             self.health_records.get(&caller).unwrap_or_default()
+        }
+
+        #[ink(message)]
+        pub fn add_health_record(&mut self, data :HealthRecord) {
+            let caller = self.env().caller();
+            self.health_records.insert(caller, &data);
         }
     }
 

@@ -4,5 +4,6 @@ members = [
     "pallets/template",
     "runtime",
 ]
+exclude = ["contract/health-record"]
 [profile.release]
 panic = "unwind"
