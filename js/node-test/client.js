@@ -16,13 +16,13 @@ const aliceAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
 
 
 //make sure this path is correct for YOUR project.
-const metadataPath = '../contract/health-record/target/ink/metadata.json';
+const metadataPath = '../../contract/health-record/build/metadata.json';
 
 //convert the metadata file constants into local variable
 const metadata = require(metadataPath);
 
 //make sure this address is correct for YOUR uploaded/instantiated contract.
-const contractAddress = '5D5MfMTWRfCsEb95pa4Hx6x8FbkWghZQFCNys3ykQ7qXWb6t';
+const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
 
 (async () => {
     //connect to our local substrate node
@@ -55,6 +55,19 @@ const contractAddress = '5D5MfMTWRfCsEb95pa4Hx6x8FbkWghZQFCNys3ykQ7qXWb6t';
             console.log(key);
         });
     });
+
+    const values = [2,2,"conejo2", "2022-09-28"];
+    await contract.tx["addHealthRecord"]({ gasLimit, storageDepositLimit }, values).signAndSend(aliceKeypair, async result => {
+            console.log(result.status.toHuman());
+            // result.events.forEach(record => {
+            //     const { event } = record;
+            //     const key = `${event.section}:${event.method}`;
+            //     console.log(key);
+            // });
+        });
+
+    // const conejo = await contract.query["flip"]({ gasLimit, storageDepositLimit });
+    console.log(conejo);
 
     // conejo = await contract.query.get(aliceAddress, { gasLimit, storageDepositLimit });
     // console.log(conejo.output?.toHuman());

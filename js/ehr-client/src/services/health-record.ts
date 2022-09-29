@@ -1,8 +1,8 @@
 import { records } from '../constants/healthRecords';
 import { HealthRecord } from '../types/healthRecord';
-import { ApiPromise, WsProvider } from '@polkadot/api'
+import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract';
-import metadata from '../../../../contract/health-record/target/ink/metadata.json';
+import metadata from '../../../../contract/health-record/build/metadata.json';
 
 const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
   const LSHealthRecords = localStorage.getItem('healthRecords');
@@ -18,17 +18,19 @@ const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
   }
 };
 
+const aliceAccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+const contractKey = "5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX";
+const serviceBlockchain = "ws://127.0.0.1:9944";
+const gasLimit = -1;
+
 const HealthRecordService = {
   getHealthRecordsByPatientId: async (patientId: string) => {
 
     try {
-      const aliceAccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-      const contractKey = "5FmuFBnr7rdqJUnkFDEjevKVSsHpyFZUUEEXX6rkdSEJZiAD";
-      const ws = new WsProvider("ws://127.0.0.1:9944");
+      const ws = new WsProvider(serviceBlockchain);
       const apiPromise = await ApiPromise.create({ provider: ws });
       const contract = new ContractPromise(apiPromise, metadata, contractKey);
-      const gasLimit = -1;
-      const { result, output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
+      const { output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
       // console.log(result.toHuman());
       console.log(output?.toHuman());
       await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
@@ -41,7 +43,23 @@ const HealthRecordService = {
     // return getLocalStorageHealthRecords(patientId);
   },
   createHealthRecord: async (healthRecord: HealthRecord) => {
-    const id = Math.random().toString(16).substring(2, 8);
+    const id = parseInt(Math.random().toString(10).substring(2, 5));
+
+    try {
+      const ws = new WsProvider(serviceBlockchain);
+      const apiPromise = await ApiPromise.create({ provider: ws });
+      const contract = new ContractPromise(apiPromise, metadata, contractKey);
+      
+      let keyring = new Keyring({ type: "sr25519" });
+      let aliceKeypair = keyring.addFromUri('//Alice');
+      // console.log(result.toHuman());
+      const values = [id, healthRecord.patientId, healthRecord.description, healthRecord.date];
+      await contract.tx["addHealthRecord"]({ gasLimit }, values).signAndSend(aliceKeypair);
+      apiPromise.disconnect();
+    } catch (error) {
+      console.log("ERROR: ",error);
+    }
+
     const LSHealthRecords = localStorage.getItem('healthRecords');
     if (LSHealthRecords) {
       const healthRecords = JSON.parse(LSHealthRecords);
