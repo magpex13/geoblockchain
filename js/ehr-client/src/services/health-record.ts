@@ -1,6 +1,6 @@
 import { records } from '../constants/healthRecords';
 import { HealthRecord } from '../types/healthRecord';
-import { ApiPromise,WsProvider } from '@polkadot/api'
+import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract';
 import metadata from '../../../../contract/health-record/target/ink/metadata.json';
 
@@ -21,7 +21,6 @@ const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
 const HealthRecordService = {
   getHealthRecordsByPatientId: async (patientId: string) => {
 
-    let healthRecords: HealthRecord[] = [];
     try {
       const aliceAccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
       const contractKey = "5FmuFBnr7rdqJUnkFDEjevKVSsHpyFZUUEEXX6rkdSEJZiAD";
@@ -32,18 +31,13 @@ const HealthRecordService = {
       const { result, output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
       // console.log(result.toHuman());
       console.log(output?.toHuman());
-      healthRecords = [<HealthRecord>output?.toHuman()];
-      console.log(healthRecords);
+      await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
       apiPromise.disconnect();
     } catch (error) {
       console.log(error);
     }
 
-    if(!healthRecords){
-      healthRecords = getLocalStorageHealthRecords(patientId);
-    }
-
-    return healthRecords;
+    return getLocalStorageHealthRecords(patientId);
     // return getLocalStorageHealthRecords(patientId);
   },
   createHealthRecord: async (healthRecord: HealthRecord) => {
