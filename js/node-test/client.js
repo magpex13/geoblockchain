@@ -1,5 +1,6 @@
 const { WsProvider, ApiPromise, Keyring } = require('@polkadot/api');
 const { ContractPromise } = require('@polkadot/api-contract');
+const { encodeAddress  } = require('@polkadot/util-crypto');
 const wsUrl = 'ws://localhost:9944';
 
 //make sure this is the correct address for //Alice.
@@ -31,7 +32,8 @@ const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
     const wsApi = await ApiPromise.create({ provider: ws });
     const contract = new ContractPromise(wsApi, metadata, contractAddress);
 
-    // console.log(contract);
+    console.log((await wsApi.query.system.account.entries()).map((x) => encodeAddress(x[0].slice(-32))));
+    console.log((await wsApi.query.system.account.entries())[0]);
     // console.log('query:\n', contract.query);
     // console.log('tx:\n', contract.tx);
 
@@ -57,17 +59,15 @@ const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
     });
 
     const values = [2,2,"conejo2", "2022-09-28"];
-    await contract.tx["addHealthRecord"]({ gasLimit, storageDepositLimit }, values).signAndSend(aliceKeypair, async result => {
-            console.log(result.status.toHuman());
-            // result.events.forEach(record => {
-            //     const { event } = record;
-            //     const key = `${event.section}:${event.method}`;
-            //     console.log(key);
-            // });
-        });
+    await contract.tx["addHealthRecord"]({ gasLimit, storageDepositLimit }, values).signAndSend(aliceKeypair);
+
+    console.log(conejo);
+
+
+
+
 
     // const conejo = await contract.query["flip"]({ gasLimit, storageDepositLimit });
-    console.log(conejo);
 
     // conejo = await contract.query.get(aliceAddress, { gasLimit, storageDepositLimit });
     // console.log(conejo.output?.toHuman());
