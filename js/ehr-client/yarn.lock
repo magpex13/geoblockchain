@@ -2704,6 +2704,11 @@
     "has-symbols" "^1.0.3"
     "which-boxed-primitive" "^1.0.2"
 
+"unique-names-generator@^4.7.1":
+  "integrity" "sha512-lMx9dX+KRmG8sq6gulYYpKWZc9RlGsgBR6aoO8Qsm3qvkSJ+3rAymr+TnV8EDMrIrwuFJ4kruzMWM/OpYzPoow=="
+  "resolved" "https://registry.npmjs.org/unique-names-generator/-/unique-names-generator-4.7.1.tgz"
+  "version" "4.7.1"
+
 "unzip-response@^1.0.0":
   "integrity" "sha512-pwCcjjhEcpW45JZIySExBHYv5Y9EeL2OIGEfrSKp2dMUFGFv4CpvZkwJbVge8OvGH2BNNtJBx67DuKuJhf+N5Q=="
   "resolved" "https://registry.npmjs.org/unzip-response/-/unzip-response-1.0.2.tgz"

@@ -10,7 +10,8 @@ const NewPatient: NextPage = () => {
     name: '',
     dateOfBirth: '',
     id: '',
-    ssn: ''
+    ssn: '',
+    key:''
   });
 
   const autoPropSetter = (prop: keyof Patient) => ({

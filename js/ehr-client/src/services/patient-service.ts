@@ -1,5 +1,9 @@
 import { patientsResponse } from '../constants/patientsResponse';
 import { Patient } from '../types/patient';
+import { uniqueNamesGenerator, names } from 'unique-names-generator';
+import { ApiPromise, WsProvider } from '@polkadot/api';
+const { encodeAddress } = require('@polkadot/util-crypto');
+
 
 const getLocalStoragePatients = (
   page: number,
@@ -20,19 +24,37 @@ const getLocalStoragePatients = (
       patients: paginatedPatients,
       totalPages: Math.ceil(filteredPatients.length / limit)
     };
-  } else {
-    localStorage.setItem('patients', JSON.stringify(patientsResponse.patients));
-    return getLocalStoragePatients(page, search, limit);
   }
+
+  return { patients: [], totalPages: 0};
+  // } else {
+  //   localStorage.setItem('patients', JSON.stringify(patientsResponse.patients));
+  //   return getLocalStoragePatients(page, search, limit);
+  // }
 };
 
 export const PatientService = {
   getPatients: async (page: number, search: string, limit: number) => {
-    const patients = getLocalStoragePatients(page, search, limit);
-    return patients;
+    const localPatients = getLocalStoragePatients(page, search, limit);
+
+    if(!localPatients || localPatients.totalPages <= 0)
+    {
+      try {
+        const serviceBlockchain = "ws://127.0.0.1:9944";
+        const ws = new WsProvider(serviceBlockchain);
+        const apiPromise = await ApiPromise.create({ provider: ws });
+        const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:Math.random().toString(10).substring(2, 5) ,key: encodeAddress(x[0].slice(-32)), name: uniqueNamesGenerator({ dictionaries: [names] }) }));
+        localStorage.setItem('patients', JSON.stringify(patients));
+        apiPromise.disconnect();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    return getLocalStoragePatients(page, search, limit);
   },
   createPatient: async (patient: Omit<Patient, 'id'>) => {
-    const id = Math.random().toString(16).substring(2, 8);
+    const id = Math.random().toString(10).substring(2, 5);
     const LSPatients = localStorage.getItem('patients');
     if (LSPatients) {
       const patients = JSON.parse(LSPatients);

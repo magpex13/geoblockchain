@@ -3,6 +3,7 @@ export type Patient = {
   name: string;
   dateOfBirth: string;
   ssn: string;
+  key: string;
 };
 
 export type PatientsResponse = {

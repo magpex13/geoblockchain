@@ -98,7 +98,7 @@ const PatientPage: NextPage = () => {
               </p>
               <p>
                 <strong>Description:</strong>{' '}
-                {healthRecord.description.length > 50
+                {healthRecord.description?.length > 50
                   ? healthRecord.description.slice(0, 50).concat('...')
                   : healthRecord.description}
               </p>

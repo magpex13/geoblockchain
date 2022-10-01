@@ -12,31 +12,38 @@ const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
       (healthRecord: HealthRecord) => healthRecord.patientId === patientId
     );
     return patientHealthRecords;
-  } else {
-    localStorage.setItem('healthRecords', JSON.stringify([]));
-    return getLocalStorageHealthRecords(patientId);
   }
+
+  return [];
+  // } else {
+  //   localStorage.setItem('healthRecords', JSON.stringify([]));
+  //   return getLocalStorageHealthRecords(patientId);
+  // }
 };
 
 const aliceAccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-const contractKey = "5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX";
+const contractKey = "5FEyK3eSRceirucxmFSuQ5h4sGR4bFvfApZkybV1kD9c6AUA";
 const serviceBlockchain = "ws://127.0.0.1:9944";
 const gasLimit = -1;
 
 const HealthRecordService = {
   getHealthRecordsByPatientId: async (patientId: string) => {
+    const localHealthRecord = getLocalStorageHealthRecords(patientId);
 
-    try {
-      const ws = new WsProvider(serviceBlockchain);
-      const apiPromise = await ApiPromise.create({ provider: ws });
-      const contract = new ContractPromise(apiPromise, metadata, contractKey);
-      const { output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
-      // console.log(result.toHuman());
-      console.log(output?.toHuman());
-      await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
-      apiPromise.disconnect();
-    } catch (error) {
-      console.log(error);
+    if (!localHealthRecord || localHealthRecord.length <= 0) {
+      try {
+        const ws = new WsProvider(serviceBlockchain);
+        const apiPromise = await ApiPromise.create({ provider: ws });
+        const contract = new ContractPromise(apiPromise, metadata, contractKey);
+        const { output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
+        // console.log(result.toHuman());
+        console.log(output?.toHuman());
+        localStorage.setItem('healthRecords', JSON.stringify([{ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId }]));
+        // await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
+        apiPromise.disconnect();
+      } catch (error) {
+        console.log(error);
+      }
     }
 
     return getLocalStorageHealthRecords(patientId);
@@ -49,7 +56,7 @@ const HealthRecordService = {
       const ws = new WsProvider(serviceBlockchain);
       const apiPromise = await ApiPromise.create({ provider: ws });
       const contract = new ContractPromise(apiPromise, metadata, contractKey);
-      
+
       let keyring = new Keyring({ type: "sr25519" });
       let aliceKeypair = keyring.addFromUri('//Alice');
       // console.log(result.toHuman());
@@ -57,13 +64,13 @@ const HealthRecordService = {
       await contract.tx["addHealthRecord"]({ gasLimit }, values).signAndSend(aliceKeypair);
       apiPromise.disconnect();
     } catch (error) {
-      console.log("ERROR: ",error);
+      console.log("ERROR - createHealthRecord: ", error);
     }
 
     const LSHealthRecords = localStorage.getItem('healthRecords');
     if (LSHealthRecords) {
       const healthRecords = JSON.parse(LSHealthRecords);
-      healthRecords.push({ ...healthRecord, id });
+      healthRecords.push({ ...healthRecord, id: id.toString() });
       localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
     }
   },
