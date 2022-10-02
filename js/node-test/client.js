@@ -1,6 +1,6 @@
 const { WsProvider, ApiPromise, Keyring } = require('@polkadot/api');
 const { ContractPromise } = require('@polkadot/api-contract');
-const { encodeAddress  } = require('@polkadot/util-crypto');
+const { encodeAddress, mnemonicGenerate, cryptoWaitReady } = require('@polkadot/util-crypto');
 const wsUrl = 'ws://localhost:9944';
 
 //make sure this is the correct address for //Alice.
@@ -13,8 +13,15 @@ const wsUrl = 'ws://localhost:9944';
 //  Public key (SS58): 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 //  SS58 Address:      5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 //
-const aliceAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
 
+//Keyring initialize
+let keyring = new Keyring({ type: "sr25519" });
+
+const mnemonic = mnemonicGenerate(12);
+console.log(mnemonic);
+
+//Hardcoded default alice addres
+const aliceAddress = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
 
 //make sure this path is correct for YOUR project.
 const metadataPath = '../../contract/health-record/build/metadata.json';
@@ -23,9 +30,15 @@ const metadataPath = '../../contract/health-record/build/metadata.json';
 const metadata = require(metadataPath);
 
 //make sure this address is correct for YOUR uploaded/instantiated contract.
-const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
+const contractAddress = '5EY5X3kj6c8NfykGNSuhwoKcynCpD5mEFzWgfeehL7Mb7yAK';
 
 (async () => {
+
+    //wait to initialize blockchain
+    await cryptoWaitReady();
+
+    const accTest = keyring.addFromUri(mnemonic, { name: 'mnemonic acc' }, 'sr25519');
+
     //connect to our local substrate node
     const ws = new WsProvider(wsUrl);
 
@@ -37,7 +50,6 @@ const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
     // console.log('query:\n', contract.query);
     // console.log('tx:\n', contract.tx);
 
-    let keyring = new Keyring({ type: "sr25519" });
     let aliceKeypair = keyring.addFromUri('//Alice');
 
 
@@ -45,7 +57,7 @@ const contractAddress = '5GZKmZXmVmXC7vVKXJnkBjAFpEgs4d3CpYBM5fCwrsYe6dbX';
     const storageDepositLimit = undefined;
 
 
-    let conejo = await contract.query.get(aliceAddress, { gasLimit, storageDepositLimit });
+    let conejo = await contract.query.get(accTest.address, { gasLimit, storageDepositLimit });
     console.log(conejo.output?.toHuman());
 
     // TRANSACTION - MODIFICAR VALORES
