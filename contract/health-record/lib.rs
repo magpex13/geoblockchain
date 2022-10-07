@@ -3,7 +3,7 @@
 use ink_lang as ink;
 
 #[ink::contract]
-mod flipper {
+mod health_record {
 
     /// Defines the storage of your contract.
     /// Add new fields to the below struct in order
@@ -13,6 +13,15 @@ mod flipper {
     use ink_storage::traits::{PackedLayout, SpreadLayout, SpreadAllocate};
     use ink_storage::Mapping;
     use ink_prelude::string::{String};
+    use ink_prelude::vec::Vec;
+
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[derive(Clone, Debug, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
+    pub struct Patient{
+        id: i32,
+        names: String,
+        date: String
+    }
 
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     #[derive(Clone, Debug, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
@@ -25,13 +34,14 @@ mod flipper {
 
     #[ink(storage)]
     #[derive(SpreadAllocate)]
-    pub struct Flipper {
+    pub struct HealthRecordContract {
         /// Stores a single `bool` value on the storage.
         value: bool,
-        health_records: Mapping<AccountId, HealthRecord>,
+        health_records: Mapping<AccountId, Vec<HealthRecord>>,
+        patients: Mapping<AccountId, Patient>,
     }
 
-    impl Flipper {
+    impl HealthRecordContract {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
         pub fn new(init_value: bool) -> Self {
@@ -43,8 +53,11 @@ mod flipper {
                     description: "conejo".into(),
                     date: "2022-08-24".into(),
                 };
+                let mut health_record_vec: Vec<HealthRecord> = Vec::new();
+                health_record_vec.push(health_record);
+
                 contract.value = init_value;
-                contract.health_records.insert(&caller, &health_record);
+                contract.health_records.insert(&caller, &health_record_vec);
             })
             // Self { value: init_value }
         }
@@ -72,7 +85,7 @@ mod flipper {
         }
 
         #[ink(message)]
-        pub fn get_health_record(&self) -> HealthRecord {
+        pub fn get_health_records(&self) -> Vec<HealthRecord> {
             let caller = Self::env().caller();
             self.health_records.get(&caller).unwrap_or_default()
         }
@@ -80,7 +93,9 @@ mod flipper {
         #[ink(message)]
         pub fn add_health_record(&mut self, data :HealthRecord) {
             let caller = self.env().caller();
-            self.health_records.insert(caller, &data);
+            let mut patient_health_records: Vec<HealthRecord> = self.get_health_records();
+            patient_health_records.push(data);
+            self.health_records.insert(caller, &patient_health_records);
         }
     }
 
