@@ -362,18 +362,17 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 				  let seal = compute.compute();
 				  if hash_meets_difficulty(&seal.work, seal.difficulty) {
 					let worker = worker;
-					worker.submit(seal.encode());
+					// worker.submit(seal.encode())
+					let _ = futures::executor::block_on(worker.submit(seal.encode()));
 				  }
 				  numb = numb.saturating_add(1u8);
 				  if numb == 255u8 {
 					numb = 0;
 				  }
-			
 				  thread::sleep(Duration::new(0, 200_000_000));
 				}
 			  }
 			});
-
 	}
 
 	// if the node isn't actively participating in consensus then it doesn't

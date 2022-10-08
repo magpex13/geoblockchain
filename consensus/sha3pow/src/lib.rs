@@ -67,7 +67,7 @@ impl<B: BlockT<Hash = H256>> PowAlgorithm<B> for MinimalSha3Algorithm {
 
 	fn difficulty(&self, _parent: B::Hash) -> Result<Self::Difficulty, Error<B>> {
 		// Fixed difficulty hardcoded here
-		Ok(U256::from(1_000_000))
+		Ok(U256::from(1))
 	}
 
 	fn verify(
@@ -82,11 +82,12 @@ impl<B: BlockT<Hash = H256>> PowAlgorithm<B> for MinimalSha3Algorithm {
 		log::info!("VERIFYING");
 
 		// TODO: Use IP from the block
-		let ip = "0.0.0.0";
+		// let ip = "0.0.0.0";
 		// See whether the node meets the location requirement. If not, fail fast.
-		if !geo::node_is_on_mining_zone(pre_hash, ip) {
-			return Ok(false);
-		}
+		// if !geo::node_is_on_mining_zone(pre_hash, ip) {
+		// 	return Ok(false);
+		// }
+		log::info!("PRE SEAL");
 
 		// Try to construct a seal object by decoding the raw seal given
 		let seal = match Seal::decode(&mut &seal[..]) {
