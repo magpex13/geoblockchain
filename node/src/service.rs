@@ -9,6 +9,10 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use std::{sync::Arc, time::Duration};
 use sp_inherents::{ CreateInherentDataProviders };
+use sha3pow::{ Compute, MinimalSha3Algorithm, hash_meets_difficulty, node_is_on_mining_zone };
+use std::thread;
+use sp_core::{ Encode, U256 };
+
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -45,20 +49,14 @@ pub fn new_partial(
 		sc_consensus::DefaultImportQueue<Block, FullClient>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
 		(
-			sc_finality_grandpa::GrandpaBlockImport<
-				FullBackend,
-				Block,
-				FullClient,
-				FullSelectChain,
-			>,
 			sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 			Option<Telemetry>,
 			sc_consensus_pow::PowBlockImport<
 				Block,
-				Arc<FullClient>,
+				sc_finality_grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>,
 				FullClient,
 				FullSelectChain,
-				sha3pow::MinimalSha3Algorithm,
+				MinimalSha3Algorithm,
 				impl sp_consensus::CanAuthorWith<Block>,
 				impl CreateInherentDataProviders<Block, ()>,
 				// dyn CreateInherentDataProviders<Block, (), InherentDataProviders = dyn InherentDataProviderExt + Send> + Sync + Send + 'static
@@ -123,9 +121,9 @@ pub fn new_partial(
 	sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 	let pow_block_import = sc_consensus_pow::PowBlockImport::new(
+		grandpa_block_import,
 		client.clone(),
-		client.clone(),
-		sha3pow::MinimalSha3Algorithm,
+		MinimalSha3Algorithm,
 		0,                              // check inherents starting at block 0
 		select_chain.clone(),
 		move |_, ()| async move {
@@ -137,8 +135,8 @@ pub fn new_partial(
 	  
 	  let import_queue = sc_consensus_pow::import_queue(
 		Box::new(pow_block_import.clone()),
-		Some(Box::new(grandpa_block_import.clone())),//None, //
-		sha3pow::MinimalSha3Algorithm,  // provide it with references to our client
+		None,//Some(Box::new(grandpa_block_import.clone())),//None, //
+		MinimalSha3Algorithm,  // provide it with references to our client
 		&task_manager.spawn_essential_handle(),
 		config.prometheus_registry(),
 	  )?;
@@ -178,7 +176,7 @@ pub fn new_partial(
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (grandpa_block_import, grandpa_link, telemetry, pow_block_import),
+		other: (grandpa_link, telemetry, pow_block_import),
 	})
 }
 
@@ -199,7 +197,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		mut keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (_block_import, grandpa_link, mut telemetry, pow_block_import),
+		other: (grandpa_link, mut telemetry, pow_block_import),
 	} = new_partial(&config)?;
 
 	if let Some(url) = &config.keystore_remote {
@@ -296,7 +294,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			Box::new(pow_block_import),
 			client,
 			select_chain,
-			sha3pow::MinimalSha3Algorithm,
+			MinimalSha3Algorithm,
 			proposer_factory,
 			network.clone(),
 			network.clone(),
@@ -348,6 +346,34 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			.spawn_essential_handle()
 			.spawn_blocking("pow", Some("block-authoring"), worker_task);
 			// .spawn_blocking("aura", Some("block-authoring"), aura);
+
+			let mut numb: u8 = 0;
+			thread::spawn(move || {
+			  loop {
+				let worker = _worker.clone();
+				let metadata = worker.metadata();				
+				if let Some(metadata) = metadata {
+				  let nonce: U256 = U256::from(0);
+				  let compute = Compute {
+					difficulty: metadata.difficulty,
+					pre_hash: metadata.pre_hash,
+					nonce,
+				  };
+				  let seal = compute.compute();
+				  if hash_meets_difficulty(&seal.work, seal.difficulty) {
+					let worker = worker;
+					worker.submit(seal.encode());
+				  }
+				  numb = numb.saturating_add(1u8);
+				  if numb == 255u8 {
+					numb = 0;
+				  }
+			
+				  thread::sleep(Duration::new(0, 200_000_000));
+				}
+			  }
+			});
+
 	}
 
 	// if the node isn't actively participating in consensus then it doesn't
