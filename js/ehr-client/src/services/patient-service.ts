@@ -3,6 +3,7 @@ import { Patient } from '../types/patient';
 import { uniqueNamesGenerator, names } from 'unique-names-generator';
 import { ApiPromise, WsProvider } from '@polkadot/api';
 const { encodeAddress } = require('@polkadot/util-crypto');
+import { GeoblockchainConstants } from '../utils/blockchain-helper';
 
 
 const getLocalStoragePatients = (
@@ -40,8 +41,7 @@ export const PatientService = {
     if(!localPatients || localPatients.totalPages <= 0)
     {
       try {
-        const serviceBlockchain = "ws://127.0.0.1:9944";
-        const ws = new WsProvider(serviceBlockchain);
+        const ws = new WsProvider(GeoblockchainConstants.url);
         const apiPromise = await ApiPromise.create({ provider: ws });
         const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:Math.random().toString(10).substring(2, 5) ,key: encodeAddress(x[0].slice(-32)), name: uniqueNamesGenerator({ dictionaries: [names] }) }));
         localStorage.setItem('patients', JSON.stringify(patients));

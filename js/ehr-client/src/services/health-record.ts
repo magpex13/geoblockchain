@@ -3,6 +3,8 @@ import { HealthRecord } from '../types/healthRecord';
 import { ApiPromise, Keyring, WsProvider } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract';
 import metadata from '../../../../contract/health-record/build/metadata.json';
+import { GeoblockchainConstants } from '../utils/blockchain-helper';
+
 
 const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
   const LSHealthRecords = localStorage.getItem('healthRecords');
@@ -21,21 +23,16 @@ const getLocalStorageHealthRecords = (patientId: string): HealthRecord[] => {
   // }
 };
 
-const aliceAccountId = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-const contractKey = "5FEyK3eSRceirucxmFSuQ5h4sGR4bFvfApZkybV1kD9c6AUA";
-const serviceBlockchain = "ws://127.0.0.1:9944";
-const gasLimit = -1;
-
 const HealthRecordService = {
   getHealthRecordsByPatientId: async (patientId: string) => {
     const localHealthRecord = getLocalStorageHealthRecords(patientId);
 
     if (!localHealthRecord || localHealthRecord.length <= 0) {
       try {
-        const ws = new WsProvider(serviceBlockchain);
+        const ws = new WsProvider(GeoblockchainConstants.url);
         const apiPromise = await ApiPromise.create({ provider: ws });
-        const contract = new ContractPromise(apiPromise, metadata, contractKey);
-        const { output } = await contract.query.getHealthRecord(aliceAccountId, { gasLimit });
+        const contract = new ContractPromise(apiPromise, metadata, GeoblockchainConstants.contractId);
+        const { output } = await contract.query.getHealthRecord(GeoblockchainConstants.aliceId, { gasLimit: GeoblockchainConstants.gasLimit });
         // console.log(result.toHuman());
         console.log(output?.toHuman());
         localStorage.setItem('healthRecords', JSON.stringify([{ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId }]));
@@ -53,15 +50,15 @@ const HealthRecordService = {
     const id = parseInt(Math.random().toString(10).substring(2, 5));
 
     try {
-      const ws = new WsProvider(serviceBlockchain);
+      const ws = new WsProvider(GeoblockchainConstants.url);
       const apiPromise = await ApiPromise.create({ provider: ws });
-      const contract = new ContractPromise(apiPromise, metadata, contractKey);
+      const contract = new ContractPromise(apiPromise, metadata, GeoblockchainConstants.contractId);
 
       let keyring = new Keyring({ type: "sr25519" });
       let aliceKeypair = keyring.addFromUri('//Alice');
       // console.log(result.toHuman());
       const values = [id, healthRecord.patientId, healthRecord.description, healthRecord.date];
-      await contract.tx["addHealthRecord"]({ gasLimit }, values).signAndSend(aliceKeypair);
+      await contract.tx["addHealthRecord"]({ gasLimit: GeoblockchainConstants.gasLimit }, values).signAndSend(aliceKeypair);
       apiPromise.disconnect();
     } catch (error) {
       console.log("ERROR - createHealthRecord: ", error);
