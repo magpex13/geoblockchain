@@ -1,8 +1,8 @@
 import { patientsResponse } from '../constants/patientsResponse';
 import { Patient } from '../types/patient';
 import { uniqueNamesGenerator, names } from 'unique-names-generator';
-import { ApiPromise, WsProvider } from '@polkadot/api';
-const { encodeAddress } = require('@polkadot/util-crypto');
+import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
+const { encodeAddress, mnemonicGenerate } = require('@polkadot/util-crypto');
 import { GeoblockchainConstants } from '../utils/blockchain-helper';
 import { ContractPromise } from '@polkadot/api-contract';
 
@@ -73,12 +73,13 @@ export const PatientService = {
 
     return getLocalStoragePatients(page, search, limit);
   },
-  createPatient: async (patient: Omit<Patient, 'id'>) => {
-    const id = Math.random().toString(10).substring(2, 5);
+  createPatient: async (patientWithoutId: Omit<Patient, 'id'>) => {
+
     const LSPatients = localStorage.getItem('patients');
-    if (LSPatients) {
+    const patient = await GeoblockchainConstants.addPatient(patientWithoutId);
+    if (LSPatients && patient) {
       const patients = JSON.parse(LSPatients);
-      patients.push({ ...patient, id });
+      patients.push(patient);
       localStorage.setItem('patients', JSON.stringify(patients));
     }
   },
