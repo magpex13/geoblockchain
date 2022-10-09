@@ -7,7 +7,7 @@ import { Patient } from '../../src/types/patient';
 const NewPatient: NextPage = () => {
   const router = useRouter();
   const [newPatient, setNewPatient] = useState<Patient>({
-    name: '',
+    names: '',
     dateOfBirth: '',
     id: '',
     ssn: '',
@@ -23,7 +23,7 @@ const NewPatient: NextPage = () => {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { dateOfBirth, name, ssn } = newPatient;
+    const { dateOfBirth, names: name, ssn } = newPatient;
     if (!dateOfBirth || dateOfBirth > new Date().toISOString()) {
       alert('Date of birth must be in the past');
       return;

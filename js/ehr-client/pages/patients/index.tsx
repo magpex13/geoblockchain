@@ -107,7 +107,7 @@ const Patients: NextPage = () => {
             }}
           >
             <p>{patient.ssn}</p>
-            <p>{patient.name}</p>
+            <p>{patient.names}</p>
             <Link href={`/patients/${patient.id}`}>
               <a
                 style={{

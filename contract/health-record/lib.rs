@@ -18,16 +18,16 @@ mod health_record {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     #[derive(Clone, Debug, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
     pub struct Patient{
-        id: i32,
         names: String,
-        date: String
+        birthday: String,
+        ssn: String
     }
 
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     #[derive(Clone, Debug, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Default)]
     pub struct HealthRecord{
         id: i32,
-        patient_id: String,
+        patient_id: AccountId,
         description: String,
         date: String
     }
@@ -49,15 +49,21 @@ mod health_record {
                 let caller = Self::env().caller();
                 let health_record :HealthRecord = HealthRecord{
                     id: 1,
-                    patient_id: "1".into(),
-                    description: "conejo".into(),
+                    patient_id: caller,
+                    description: "Tratamiento antiviral".into(),
                     date: "2022-08-24".into(),
+                };
+                let patient :Patient = Patient{
+                    names: "Alice Maravilla".into(),
+                    birthday: "1997-08-30".into(),
+                    ssn: "12345".into(),
                 };
                 let mut health_record_vec: Vec<HealthRecord> = Vec::new();
                 health_record_vec.push(health_record);
 
                 contract.value = init_value;
                 contract.health_records.insert(&caller, &health_record_vec);
+                contract.patients.insert(&caller, &patient);
             })
             // Self { value: init_value }
         }
@@ -96,6 +102,18 @@ mod health_record {
             let mut patient_health_records: Vec<HealthRecord> = self.get_health_records();
             patient_health_records.push(data);
             self.health_records.insert(caller, &patient_health_records);
+        }
+
+        #[ink(message)]
+        pub fn add_patient(&mut self, data :Patient) {
+            let caller = self.env().caller();
+            self.patients.insert(caller, &data);
+        }
+
+        #[ink(message)]
+        pub fn get_patient(&mut self) -> Patient {
+            let caller = self.env().caller();
+            self.patients.get(&caller).unwrap_or_default()
         }
     }
 

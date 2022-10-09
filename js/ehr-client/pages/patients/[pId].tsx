@@ -49,7 +49,7 @@ const PatientPage: NextPage = () => {
         </Link>
       </div>
       <p>
-        <strong>Name:</strong> {patient.name}
+        <strong>Name:</strong> {patient.names}
       </p>
       <p>
         <strong>Health Records:</strong>

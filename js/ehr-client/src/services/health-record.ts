@@ -32,10 +32,10 @@ const HealthRecordService = {
         const ws = new WsProvider(GeoblockchainConstants.url);
         const apiPromise = await ApiPromise.create({ provider: ws });
         const contract = new ContractPromise(apiPromise, metadata, GeoblockchainConstants.contractId);
-        const { output } = await contract.query.getHealthRecord(GeoblockchainConstants.aliceId, { gasLimit: GeoblockchainConstants.gasLimit });
+        const { output } = await contract.query.getHealthRecords(patientId, { gasLimit: GeoblockchainConstants.gasLimit });
         // console.log(result.toHuman());
         console.log(output?.toHuman());
-        localStorage.setItem('healthRecords', JSON.stringify([{ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId }]));
+        localStorage.setItem('healthRecords', JSON.stringify((<HealthRecord[]>output?.toHuman()).map((x) => ({ ...x, prescription: [], observations: [] }))));
         // await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
         apiPromise.disconnect();
       } catch (error) {
