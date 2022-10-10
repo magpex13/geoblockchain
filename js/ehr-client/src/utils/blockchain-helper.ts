@@ -2,6 +2,7 @@ import { ApiPromise, Keyring, WsProvider } from "@polkadot/api";
 import { ContractPromise } from "@polkadot/api-contract";
 import { mnemonicGenerate } from "@polkadot/util-crypto";
 import metadata from '../../../../contract/health-record/build/metadata.json';
+import { HealthRecord } from "../types/healthRecord";
 import { Patient } from "../types/patient";
 const { encodeAddress } = require('@polkadot/util-crypto');
 
@@ -47,6 +48,24 @@ export const GeoblockchainConstants = {
             await apiInstance.disconnect();
             return <Patient>{...patientWithoutId, id: keyPair.address};
 
+        } catch (error) {
+            console.log(error);
+            return undefined;
+        }
+    },
+    updateHealthRecord: async (healthRecord: HealthRecord) => {
+        try {
+            let keyring = new Keyring({ type: "sr25519" });
+            const keyPair = keyring.addFromUri(mnemonicGenerate(12), { name: healthRecord.patientId }, 'sr25519');
+
+            const ws = new WsProvider(GeoblockchainConstants.url);
+            const apiInstance = await ApiPromise.create({ provider: ws });
+
+            const contract = new ContractPromise(apiInstance, metadata, GeoblockchainConstants.contractId);
+            await contract.tx["updateHealthRecord"]({ gasLimit: GeoblockchainConstants.gasLimit }, [healthRecord.id, healthRecord.patientId, healthRecord.description, healthRecord.date]).signAndSend(keyPair);
+            await apiInstance.disconnect();
+
+            return healthRecord;
         } catch (error) {
             console.log(error);
             return undefined;

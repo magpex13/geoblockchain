@@ -105,6 +105,21 @@ mod health_record {
         }
 
         #[ink(message)]
+        pub fn update_health_record(&mut self, data :HealthRecord) {
+            let caller = self.env().caller();
+            let mut patient_health_records: Vec<HealthRecord> = self.get_health_records();
+
+            let index_element = patient_health_records
+                .iter()
+                .position(|x| x.id == data.id).unwrap();
+
+            patient_health_records.remove(index_element);
+
+            patient_health_records.push(data);
+            self.health_records.insert(caller, &patient_health_records);
+        }
+
+        #[ink(message)]
         pub fn add_patient(&mut self, data :Patient) {
             let caller = self.env().caller();
             self.patients.insert(caller, &data);

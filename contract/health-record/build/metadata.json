@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x4669db300714cf82d5dce1f8fd908176d146db5104c1fe67c241b33dd9ba6276",
+    "hash": "0xa06d72740f771dc98f965a9c651647550bbbd03e46aa44123da5a233b889addd",
     "language": "ink! 3.3.1",
     "compiler": "rustc 1.63.0-nightly"
   },
@@ -109,6 +109,25 @@
           "payable": false,
           "returnType": null,
           "selector": "0xabb17b92"
+        },
+        {
+          "args": [
+            {
+              "label": "data",
+              "type": {
+                "displayName": [
+                  "HealthRecord"
+                ],
+                "type": 6
+              }
+            }
+          ],
+          "docs": [],
+          "label": "update_health_record",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0xad5ff144"
         },
         {
           "args": [

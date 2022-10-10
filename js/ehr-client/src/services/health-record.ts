@@ -73,11 +73,12 @@ const HealthRecordService = {
   },
   updateHealthRecord: async (healthRecord: HealthRecord) => {
     const LSHealthRecords = localStorage.getItem('healthRecords');
-    if (LSHealthRecords) {
+    const healthRecordUpdated = await GeoblockchainConstants.updateHealthRecord(healthRecord);
+    if (LSHealthRecords && healthRecordUpdated) {
       const healthRecords = JSON.parse(LSHealthRecords);
       const index = healthRecords.findIndex(
         (healthRecordItem: HealthRecord) =>
-          healthRecordItem.id === healthRecord.id
+          healthRecordItem.id === healthRecordUpdated.id
       );
       healthRecords[index] = healthRecord;
       localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
