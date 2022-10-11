@@ -38,7 +38,13 @@ const HealthRecordService = {
         let healthRecords: HealthRecord[] = <HealthRecord[]>output?.toHuman();
         healthRecords = healthRecords.filter(x => x.patientId == patientId);
 
-        localStorage.setItem('healthRecords', JSON.stringify(healthRecords.map((x) => ({ ...x, prescription: [], observations: [] }))));
+        const allLocalHealthRecords =  localStorage.getItem('healthRecords');
+        let allHealthRecords: HealthRecord[] = [];
+        if(allLocalHealthRecords){
+          allHealthRecords = JSON.parse(allLocalHealthRecords);
+        }
+
+        localStorage.setItem('healthRecords', JSON.stringify( allHealthRecords && allHealthRecords.length > 0? allHealthRecords.concat(healthRecords.filter(x => x.patientId == patientId).map((x) => ({ ...x, prescription: [], observations: [] }))): healthRecords.map((x) => ({ ...x, prescription: [], observations: [] }) )));
         // await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
         apiPromise.disconnect();
       } catch (error) {
@@ -56,7 +62,7 @@ const HealthRecordService = {
 
       let id = 1;
       if (healthRecords.length > 0) {
-        id = parseInt((healthRecords?.at(-1)?.id!) + 1);
+        id = parseInt((healthRecords?.at(-1)?.id!)) + 1;
       }
 
       healthRecord = (await GeoblockchainConstants.addHealthRecord({ ...healthRecord, id: id.toString() }))!;

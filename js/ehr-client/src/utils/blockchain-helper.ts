@@ -8,7 +8,7 @@ import { Patient } from "../types/patient";
 
 export const GeoblockchainConstants = {
     url: "ws://127.0.0.1:9944",
-    contractId: "5G4GcGZ3vgNZ7EAHFJERkFdiLaJVgQHDVMNgUHgoaTN2uhjv",
+    contractId: "5Da53VsDbijcbAB1dPKZaruY44VpumNyww4PCpthi9MKTyHs",
     aliceId: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
     gasLimit: -1,
     getPatients: async (apiPromise: ApiPromise | undefined = undefined) => {
