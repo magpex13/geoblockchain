@@ -41,31 +41,31 @@ export const PatientService = {
 
     if (!localPatients || localPatients.totalPages <= 0) {
       try {
-        const ws = new WsProvider(GeoblockchainConstants.url);
-        const apiPromise = await ApiPromise.create({ provider: ws });
-        // const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:encodeAddress(x[0].slice(-32)) , name: uniqueNamesGenerator({ dictionaries: [names] }) }));
-        // const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:Math.random().toString(10).substring(2, 5) ,key: encodeAddress(x[0].slice(-32)), name: uniqueNamesGenerator({ dictionaries: [names] }) }));
-        const entries = await apiPromise.query.system.account.entries();
+        // const ws = new WsProvider(GeoblockchainConstants.url);
+        // const apiPromise = await ApiPromise.create({ provider: ws });
+        // // const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:encodeAddress(x[0].slice(-32)) , name: uniqueNamesGenerator({ dictionaries: [names] }) }));
+        // // const patients = (await apiPromise.query.system.account.entries()).map<Patient>((x) => (<Patient>{ id:Math.random().toString(10).substring(2, 5) ,key: encodeAddress(x[0].slice(-32)), name: uniqueNamesGenerator({ dictionaries: [names] }) }));
+        // const entries = await apiPromise.query.system.account.entries();
 
-        const patients: Patient[] = [];
+        const patients: Patient[] = (await GeoblockchainConstants.getPatients())!;
 
-        for (let index = 0; index < entries.length; index++) {
-          let patient = undefined;
+        // for (let index = 0; index < entries.length; index++) {
+        //   let patient = undefined;
 
-          try {
-            const accountId = encodeAddress(entries[index][0].slice(-32));
-            patient = await GeoblockchainConstants.getPatient(accountId, apiPromise);
-          } catch (error) {
-          }
+        //   try {
+        //     const accountId = encodeAddress(entries[index][0].slice(-32));
+        //     patient = await GeoblockchainConstants.getPatient(accountId, apiPromise);
+        //   } catch (error) {
+        //   }
 
-          if (patient) {
-            patients.push(patient);
-          }
+        //   if (patient) {
+        //     patients.push(patient);
+        //   }
 
-        }
+        // }
 
         localStorage.setItem('patients', JSON.stringify(patients));
-        apiPromise.disconnect();
+        // apiPromise.disconnect();
       } catch (error) {
         console.log(error);
       }
@@ -76,11 +76,16 @@ export const PatientService = {
   createPatient: async (patientWithoutId: Omit<Patient, 'id'>) => {
 
     const LSPatients = localStorage.getItem('patients');
-    const patient = await GeoblockchainConstants.addPatient(patientWithoutId);
-    if (LSPatients && patient) {
-      const patients = JSON.parse(LSPatients);
-      patients.push(patient);
-      localStorage.setItem('patients', JSON.stringify(patients));
+    if (LSPatients) {
+
+      const patients: Patient[] = JSON.parse(LSPatients);
+      const patient = await GeoblockchainConstants.addPatient({ ...patientWithoutId, id: (patients?.at(-1)?.id!) + 1 });
+
+      if (patient) {
+        patients.push(patient);
+        localStorage.setItem('patients', JSON.stringify(patients));
+      }
+
     }
   },
   getPatient: async (id: string) => {

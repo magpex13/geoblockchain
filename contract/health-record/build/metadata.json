@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0xa06d72740f771dc98f965a9c651647550bbbd03e46aa44123da5a233b889addd",
+    "hash": "0x4e576148446c194727f18e4c91bac4a145d0265311b8d38e11fac433a786e164",
     "language": "ink! 3.3.1",
     "compiler": "rustc 1.63.0-nightly"
   },
   "contract": {
-    "name": "flipper",
+    "name": "health_record_contract",
     "version": "0.1.0",
     "authors": [
       "[your_name] <[your_email]>"
@@ -137,7 +137,7 @@
                 "displayName": [
                   "Patient"
                 ],
-                "type": 11
+                "type": 12
               }
             }
           ],
@@ -151,16 +151,16 @@
         {
           "args": [],
           "docs": [],
-          "label": "get_patient",
+          "label": "get_patients",
           "mutates": true,
           "payable": false,
           "returnType": {
             "displayName": [
-              "Patient"
+              "Vec"
             ],
             "type": 11
           },
-          "selector": "0x346da6ad"
+          "selector": "0x16a6e9cb"
         }
       ]
     },
@@ -300,8 +300,8 @@
                 },
                 {
                   "name": "patient_id",
-                  "type": 2,
-                  "typeName": "AccountId"
+                  "type": 7,
+                  "typeName": "i32"
                 },
                 {
                   "name": "description",
@@ -317,7 +317,7 @@
             }
           },
           "path": [
-            "flipper",
+            "health_record_contract",
             "health_record",
             "HealthRecord"
           ]
@@ -394,8 +394,23 @@
         "id": 11,
         "type": {
           "def": {
+            "sequence": {
+              "type": 12
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": {
+          "def": {
             "composite": {
               "fields": [
+                {
+                  "name": "id",
+                  "type": 7,
+                  "typeName": "i32"
+                },
                 {
                   "name": "names",
                   "type": 8,
@@ -415,7 +430,7 @@
             }
           },
           "path": [
-            "flipper",
+            "health_record_contract",
             "health_record",
             "Patient"
           ]

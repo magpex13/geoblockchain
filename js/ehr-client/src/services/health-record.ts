@@ -32,10 +32,13 @@ const HealthRecordService = {
         const ws = new WsProvider(GeoblockchainConstants.url);
         const apiPromise = await ApiPromise.create({ provider: ws });
         const contract = new ContractPromise(apiPromise, metadata, GeoblockchainConstants.contractId);
-        const { output } = await contract.query.getHealthRecords(patientId, { gasLimit: GeoblockchainConstants.gasLimit });
+        const { output } = await contract.query.getHealthRecords(GeoblockchainConstants.aliceId, { gasLimit: GeoblockchainConstants.gasLimit });
         // console.log(result.toHuman());
         console.log(output?.toHuman());
-        localStorage.setItem('healthRecords', JSON.stringify((<HealthRecord[]>output?.toHuman()).map((x) => ({ ...x, prescription: [], observations: [] }))));
+        let healthRecords: HealthRecord[] = <HealthRecord[]>output?.toHuman();
+        healthRecords = healthRecords.filter(x => x.patientId == patientId);
+
+        localStorage.setItem('healthRecords', JSON.stringify(healthRecords.map((x) => ({ ...x, prescription: [], observations: [] }))));
         // await HealthRecordService.createHealthRecord({ ...<HealthRecord>output?.toHuman(), prescription: [], observations: [], patientId });
         apiPromise.disconnect();
       } catch (error) {
@@ -47,28 +50,22 @@ const HealthRecordService = {
     // return getLocalStorageHealthRecords(patientId);
   },
   createHealthRecord: async (healthRecord: HealthRecord) => {
-    const id = parseInt(Math.random().toString(10).substring(2, 5));
-
-    try {
-      const ws = new WsProvider(GeoblockchainConstants.url);
-      const apiPromise = await ApiPromise.create({ provider: ws });
-      const contract = new ContractPromise(apiPromise, metadata, GeoblockchainConstants.contractId);
-
-      let keyring = new Keyring({ type: "sr25519" });
-      let aliceKeypair = keyring.addFromUri('//Alice');
-      // console.log(result.toHuman());
-      const values = [id, healthRecord.patientId, healthRecord.description, healthRecord.date];
-      await contract.tx["addHealthRecord"]({ gasLimit: GeoblockchainConstants.gasLimit }, values).signAndSend(aliceKeypair);
-      apiPromise.disconnect();
-    } catch (error) {
-      console.log("ERROR - createHealthRecord: ", error);
-    }
-
     const LSHealthRecords = localStorage.getItem('healthRecords');
     if (LSHealthRecords) {
-      const healthRecords = JSON.parse(LSHealthRecords);
-      healthRecords.push({ ...healthRecord, id: id.toString() });
-      localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+      const healthRecords: HealthRecord[] = JSON.parse(LSHealthRecords);
+
+      let id = 1;
+      if (healthRecords.length > 0) {
+        id = parseInt((healthRecords?.at(-1)?.id!) + 1);
+      }
+
+      healthRecord = (await GeoblockchainConstants.addHealthRecord({ ...healthRecord, id: id.toString() }))!;
+
+      if (healthRecord) {
+        healthRecords.push(healthRecord);
+        localStorage.setItem('healthRecords', JSON.stringify(healthRecords));
+      }
+
     }
   },
   updateHealthRecord: async (healthRecord: HealthRecord) => {

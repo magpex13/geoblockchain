@@ -50,6 +50,10 @@ const contractAddress = '5EY5X3kj6c8NfykGNSuhwoKcynCpD5mEFzWgfeehL7Mb7yAK';
     // console.log('query:\n', contract.query);
     // console.log('tx:\n', contract.tx);
 
+    await wsApi.tx.sudo.sudo(
+        wsApi.tx.balances.setBalance(accTest.address,'11529','0')
+    ).signAndSend(aliceKeypair, (result) => { console.log(result); });
+
     let aliceKeypair = keyring.addFromUri('//Alice');
 
 
