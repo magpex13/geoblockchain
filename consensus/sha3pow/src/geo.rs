@@ -26,15 +26,16 @@ pub fn get_geolocation_by_ip(ip: &str) -> (f64, f64) {
 
 pub fn node_is_on_mining_zone(hash: &H256, ip: &str) -> bool {
 	let generator = gradient_noise(hash);
-	let mut canvas = [[false; 180]; 360];
+	let mut canvas = [[false; 360]; 180];
+	let noise_scale = 0.03;
+	let gap = 0.2;
 	let mut xoff: f64 = 0.0;
-	let noise_scale = 0.01;
 
 	for x in 0..360 {
 		let mut yoff: f64 = 0.0;
 		for y in 0..180 {
 			let n = generator.get([xoff, yoff]);
-			canvas[x][y] = n > 0.5;
+			canvas[y][x] = n > gap;
 			yoff += noise_scale;
 		}
 		xoff += noise_scale;
